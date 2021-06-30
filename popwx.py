@@ -31,11 +31,9 @@ wx_raw = pd.read_csv(wx_path)
 
 
 # download third party airport code dataset
-# keep US stations (starting with K)
 # extract latitude and longitude
 airport_path = 'https://raw.githubusercontent.com/dri3s/poptemp/main/airport-codes_csv.csv'
 airports = pd.read_csv(airport_path)
-airports = airports.loc[(airports.ident.str[0] == 'K')]
 airports = airports.rename(columns={'ident':'station_code'})
 
 airports[['lon','lat']] = airports.coordinates.str.split(',', expand=True)
@@ -119,6 +117,10 @@ popfind = pop_raw.merge(locs, on='key')
 popfind['d'] = haversine_np(popfind.lon_x, popfind.lat_x, popfind.lon_y, popfind.lat_y)
 pop = popfind.sort_values(by=['city_x','state','d']).groupby(['city_x','state']).first().reset_index()
 pop = pop.rename(columns={'city_x':'city'})[['city','state','population','station_code','d']]
+
+
+# In[]
+
 
 # matched cities/stations must be within 1000km
 # this will drop HI/AK - OK, since small population
