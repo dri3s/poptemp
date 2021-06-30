@@ -149,6 +149,12 @@ out = out.drop(columns=['population','d'])
 # In[]
 
 
+pd.DataFrame(out.loc[(out.doy >= (365 - 45 - d)) | (out.doy <= 45 - d)][tempcols].describe()
+
+
+# In[]
+
+
 # graphs
 
 # graph 1: temperature compared to seasonal avg, high, low
@@ -158,27 +164,47 @@ out['doy'] = out.date.dt.dayofyear
 
 def seasonal_doy(d):
     if d <= 45:
-        outdoy =  pd.DataFrame(out.loc[(out.doy >= (365 - 45 - d)) | (out.doy <= 45 - d)][tempcols].mean()).T
+        outdoy =  pd.DataFrame(out.loc[(out.doy >= (365 - 45 - d)) | (out.doy <= 45 - d)][tempcols].describe()).loc[['mean','min','max']]
     
     elif d >= 365 - 45:
-        outdoy =  pd.DataFrame(out.loc[(out.doy >= d - 45) | (out.doy <= 365 - d)][tempcols].mean()).T        
+        outdoy =  pd.DataFrame(out.loc[(out.doy >= d - 45) | (out.doy <= 365 - d)][tempcols].describe()).loc[['mean','min','max']]
 
     else:
-        outdoy =  pd.DataFrame(out.loc[out.doy.between(d - 45, d + 45)][tempcols].mean()).T
+        outdoy =  pd.DataFrame(out.loc[out.doy.between(d - 45, d + 45)][tempcols].describe()).loc[['mean','min','max']]
         
+    outdoy = outdoy.reset_index()
+    outdoy = pd.melt(outdoy, id_vars='index')
+    outdoy['key'] = outdoy['index'] + outdoy['variable']
+    outdoy = pd.pivot_table(outdoy, columns='key', values='value').reset_index(drop=True)
     outdoy['doy'] = d
-    return outdoy
+    return outdoy    
 
-seasonal = pd.concat(seasonal_doy(d) for d in range(1, 367))
-seasonal.columns = [c.replace('temp','seasonal') for c in seasonal.columns]
+seasonal = pd.concat(seasonal_doy(d) for d in range(1, 367))                               
+
+
+# In[]
+
+
 out = out.merge(seasonal)
+
+
+# In[]
+
+
+out.columns
+
+
+# In[]
+
+
 out = out.sort_values(by='date')
 
 for typ in ['mean','min','max']:
-
     fig, ax = plt.subplots()
     ax.plot(out['date'], out['temp_{}_c'.format(typ)], label='daily {}'.format(typ))
-    ax.plot(out['date'], out['seasonal_{}_c'.format(typ)], label='seasonal {}'.format(typ))
+    
+    for aggtyp in ['mean','min','max']:
+        ax.plot(out['date'], out['{}temp_{}_c'.format(typ, aggtyp)], label='{} of daily {}'.format(aggtyp, typ))
     ax.grid()
     ax.legend()
     ax.set_title(typ)
