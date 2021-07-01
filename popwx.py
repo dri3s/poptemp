@@ -149,12 +149,6 @@ out = out.drop(columns=['population','d'])
 # In[]
 
 
-pd.DataFrame(out.loc[(out.doy >= (365 - 45 - d)) | (out.doy <= 45 - d)][tempcols].describe()
-
-
-# In[]
-
-
 # graphs
 
 # graph 1: temperature compared to seasonal avg, high, low
@@ -186,12 +180,6 @@ seasonal = pd.concat(seasonal_doy(d) for d in range(1, 367))
 
 
 out = out.merge(seasonal)
-
-
-# In[]
-
-
-out.columns
 
 
 # In[]
